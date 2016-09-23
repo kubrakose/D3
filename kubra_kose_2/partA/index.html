@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Part A</title>
+    <script type="text/javascript" src="http://d3js.org/d3.v3.js" charset="utf-8"></script>
+    <script type="text/javascript" src="countries.json"></script>
+     <style type="text/css">
+         .axis path,
+         .axis line {  fill: none;  stroke: black;  shape-rendering: crispEdges;  }
+         .axis text {  font-family: sans-serif;  font-size: 11px;  }
+         .line {stroke-width: 3px;)}
+        </style>
+</head>
+<body>
+    <script type="text/javascript">
+        var l=[];
+        var p=[];
+        var y=[];
+        d3.json("countries.json",function(d) {
+            for (i = 0; i < d.length; i++) {
+                if (d[i]["continent"] == "Europe") {
+                    d[i]["years"] = d[i]["years"].slice(5, 18);
+                    for (ii = 0; ii < d[i]["years"].length; ii++) {
+                        p.push(d[i]["years"][ii]["population"]);
+                        if (y.indexOf(d[i]["years"][ii]["year"]) < 0) {
+                            y.push(d[i]["years"][ii]["year"])
+                        }
+                    }
+                    for (ii = 0; ii < d[i]["years"].length; ii++) {
+                        d[i]["years"][ii] = [d[i]["years"][ii]["year"], d[i]["years"][ii]["population"]];
+                    }
+                    l.push([d[i]["name"], d[i]["years"]]);
+                }
+            }
+            for (i2=0; i2< 13; i2++){
+                   l.sort(function(x, y){return (y[1][i2][1]- x[1][i2][1]);});
+            }
+            console.log(p);
+            console.log(l);
+            var w=800;
+            var hh=9000;
+            var h=8000;
+            var padding=55;
+
+            var xScale=d3.scale.linear().domain([2000, 2012]).range([padding+10, w-padding]);
+            var yScale = d3.scale.linear().domain([0, d3.max(p)]).range([h-padding*5, padding]);
+
+            var xAxis = d3.svg.axis()
+                    .scale(xScale)
+                    .orient("bottom")
+                    .ticks(y.length)
+                    .tickFormat(d3.format("g"));
+
+            var yAxis = d3.svg.axis()
+                    .scale(yScale)
+                    .orient("left")
+                    .ticks(p.length)
+                    .tickFormat(d3.format("g"));
+
+            var line=d3.svg.line()
+                    .x(function(d){return xScale(d[0])})
+                    .y(function(d){return yScale(d[1])});
+
+            var svg1 = d3.select("body")
+            		.append("svg")
+                    .attr("class", "svg1")
+            		.attr("width", 3000)
+            		.attr("height", 13000);
+
+            function colorss(x) {var colorss2 = ["#ff1493","#3366cc", "#dc3912", "#ff9900","#ee00ee","#ff0000",
+                "#109618", "#990099","#8b4513", "#0099c6", "#dd4477","#e066ff", "#66aa00", "#b82e2e", "#ffe413", "#316395", "#994499",
+                "#22aa99","#ff4500","#7fff00", "#aaaa11", "#6633cc","#7cfc00", "#e67300","#ff82ab", "#651067", "#329262", "" +
+                "#ff3030","#5574a6", "#3b3eac"];
+                        return colorss2[x % colorss2.length];}
+
+            d3.select("svg").selectAll("text").data(l).enter().append("text")
+                    .text(function(d){return d[0]}).attr("x",1000)
+                    .attr("y",function(d,i){return 50+i*100})
+                    .attr("fill", function(d,i){return colorss(i)});
+
+            var svg = d3.select("svg")
+            		.append("svg")
+            		.attr("width", 1000)
+            		.attr("height", hh);
+            svg.selectAll("c")
+                    .data(l)
+                    .enter()
+                    .append("g")
+                    .attr("class", "c")
+                    .attr("id", function(d){return d[0]});
+            var path=svg.selectAll("g")
+                    .append("path")
+                    .attr("class", "line")
+                    .attr("id", function(d){return d[0]})
+                    .attr("d", function(d){return line(d[1])})
+                    .attr("fill", "none")
+                    .attr("stroke", function(d,i){return colorss(i);});
+
+           //var a=(path.attr("d"));
+           //console.log(a.split(","));
+           //console.log(d3.select("path#Russia").attr("d"));
+           //console.log((d3.select("path.line")[0]));
+            var po=[];
+            for(i4=0; i4<l.length; i4++){
+                try{
+                    var b=(d3.select("path#"+l[i4][0]).attr("d"));
+
+                    po.push( b.split(",").pop());
+                }
+            catch(err){continue;}}
+            console.log(po);
+            po.splice(3,0,"4392.4191659753715");
+            po.splice(12,0,"7175.072017567633");
+            po.splice(21,0,"7442.073557368585");
+            po.splice(24,0,"7524.408161170153");
+            console.log(po);
+
+            svg.append("g")
+                     .attr("class", "axis")
+                     .attr("transform", "translate(0 ," + (h - padding*5) + ")")
+                     .call(xAxis);
+		    svg.append("g")
+                     .attr("class", "axis")
+                     .attr("transform", "translate(" + 65 + ",0)")
+                     .call(yAxis);
+
+            //////////////////////////////////
+            svg.selectAll("g.c").append("text")
+                    .attr("class", "names")
+                    .data(l)
+                    .attr("x",750)
+                    .attr("y",function(d,i){return po[i];})
+                    .attr("fill", function(d,i){return colorss(i)})
+                    .text(function(d){return d[0];});
+        })
+    </script>
+</body>
+</html>

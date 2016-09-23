@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Part B</title>
+    <script type="text/javascript" src="http://d3js.org/d3.v3.js" charset="utf-8"></script>
+    <style type="text/css">
+        form{ padding-left: 400px;  }
+    </style>
+</head>
+<body>
+<form>
+    <label><input type="radio" name="click" id="r1" checked> Population </label>
+    <label><input type="radio" name="click" id="r2"> GDP </label>
+    <label><input type="radio" name="click" id="r3"> Life Expectancy </label>
+</form>
+<script type="text/javascript">
+    var l=[];
+    var deneme=[];
+    var d1=[];
+    var d2=[];
+    d3.json("countries.json",function(d){
+        for(var i=0; i< d.length; i++){
+            deneme.push([d[i]["name"],d[i]["years"][17]]);
+            //console.log(d[i]["years"][17])
+        }
+        //console.log(l);
+        //deneme= l.splice(0,15);
+        for (var i2=0; i2<deneme.length; i2++) {
+            d1.push(deneme[i2][1]["population"]);
+        }
+        deneme.sort(function(x, y){
+            return (y[1]["population"] - x[1]["population"]);});
+        for (var i3=0; i3<deneme.length; i3++) {
+                d2.push(deneme[i3][0]);
+            }
+        console.log(deneme);
+        var w=4000;
+        var h=4000;
+        var dd1=d1.sort(function(x, y){
+            return (y - x);});
+
+        var xScale=d3.scale.linear().domain([0,d3.max(d1)]).range([0,w/6]);
+        var yScale=d3.scale.ordinal().domain(d3.range(deneme.length)).rangeRoundBands([0,h-500],0.05);
+        var axsS=d3.scale.ordinal().domain(d2).rangeRoundBands([0,h-500],0.05);
+        var opacityS=d3.scale.linear().domain([0,d3.max(d1)/25]).range([0,1]);
+
+        var yAxis = d3.svg.axis()
+                    .scale(axsS)
+                    .orient("left")
+                    .ticks(d1.length);
+
+
+        var svg=d3.select("body").append("svg").attr("width",w).attr("height",h);
+
+        svg.selectAll("rect").data(deneme).enter().append("rect")
+                .attr("y",function(d,i){return yScale(i);})
+                .attr("x", xScale(0)+300)
+                .attr("height", yScale.rangeBand())
+                .attr("width", function(d){return xScale(d[1]["population"]);})
+                .attr("fill", "purple");
+
+        svg.selectAll("text").data(deneme).enter().append("text").text(function(d){return d[1]["population"];})
+                .attr("x",function(d){return xScale(d[1]["population"])+350;})
+                .attr("y",function(d,i){return yScale(i)+yScale.rangeBand()/2;})
+                .attr("text-anchor", "middle")
+                .attr("font-family","sans-serif").attr("font-size","11px").attr("fill","black");
+
+        svg.append("g")
+                     .attr("class", "axis")
+                     .attr("transform", "translate(" + 300  + ",0)")
+                     .call(yAxis);
+
+        d3.selectAll("rect").data(dd1)
+                .transition()
+                .style("opacity", function(d){return opacityS(d)});
+
+        d3.select("input#r1").on("click",function(){
+            svg.selectAll("g").remove();
+            for (var i2=0; i2<deneme.length; i2++) {
+                d1.push(deneme[i2][1]["population"]);
+            }
+            deneme.sort(function(x, y){return (y[1]["population"] - x[1]["population"]);});
+            for (var i3=0; i3<deneme.length; i3++) {
+                d2. push(deneme[i3][0]);
+            }
+            var xScale=d3.scale.linear().domain([0,d3.max(d1)]).range([0,w/6]);
+            var yScale=d3.scale.ordinal().domain(d3.range(deneme.length)).rangeRoundBands([0,h-500],0.05);
+            var axsS=d3.scale.ordinal().domain(d2).rangeRoundBands([0,h-500],0.05);
+            var opacityS=d3.scale.linear().domain([0,d3.max(d1)]).range([0,1]);
+            var dataset=deneme;
+            svg.selectAll("rect").data(dataset).attr("x", xScale(0)+300)
+                    .attr("width",function(d){return xScale(d[1]["population"]);});
+            svg.selectAll("text")
+                    .data(dataset).text(function(d) {return d[1]["population"];}).attr("x", function(d) {return xScale(d[1]["population"]) + 350;})
+                    .attr("y",function(d,i){return yScale(i)+yScale.rangeBand()/2;});
+            var yAxis = d3.svg.axis()
+                    .scale(axsS)
+                    .orient("left")
+                    .ticks(d1.length);
+            svg.append("g")
+                     .attr("class", "axis")
+                     .attr("transform", "translate(" + 300  + ",0)")
+                     .call(yAxis);
+   		  });
+
+        d3.select("input#r2").on("click",function(){
+            svg.selectAll("g").remove();
+            var d1=[];
+            var d2=[];
+            for (var i2=0; i2<deneme.length; i2++) {
+                d1.push(deneme[i2][1]["gdp"]);
+            }
+            deneme.sort(function(x, y){return (y[1]["gdp"] - x[1]["gdp"]);});
+            console.log(deneme);
+            for (var i3=0; i3<deneme.length; i3++) {
+                d2.push(deneme[i3][0]);
+            }
+            console.log(d2);
+            var xScale=d3.scale.linear().domain([0,d3.max(d1)]).range([0,w/6]);
+            var yScale=d3.scale.ordinal().domain(d3.range(deneme.length)).rangeRoundBands([0,h-500],0.05);
+            var axsS=d3.scale.ordinal().domain(d2).rangeRoundBands([0,h-500],0.05);
+            var opacityS=d3.scale.linear().domain([0,d3.max(d1)]).range([0,1]);
+            var dataset=deneme;
+            svg.selectAll("rect").data(dataset).attr("x", xScale(0)+300)
+                    .attr("width",function(d){return xScale(d[1]["gdp"]);});
+            svg.selectAll("text")
+                    .data(dataset).text(function(d) {return d[1]["gdp"];}).attr("x", function(d) {return xScale(d[1]["gdp"]) + 350;})
+                    .attr("y",function(d,i){return yScale(i)+yScale.rangeBand()/2;});
+            var yAxis = d3.svg.axis()
+                    .scale(axsS)
+                    .orient("left")
+                    .ticks(d1.length);
+            svg.append("g")
+                     .attr("class", "axis")
+                     .attr("transform", "translate(" + 300  + ",0)")
+                     .call(yAxis);
+   		  });
+
+        d3.select("input#r3").on("click",function(){
+            svg.selectAll("g").remove();
+            var d1=[];
+            var d2=[];
+            for (var i2=0; i2<deneme.length; i2++) {
+                d1.push(deneme[i2][1]["life_expectancy"]);
+            }
+            deneme.sort(function(x, y){return (y[1]["life_expectancy"] - x[1]["life_expectancy"]);});
+            console.log(deneme);
+            for (var i3=0; i3<deneme.length; i3++) {
+                d2.push(deneme[i3][0]);
+            }
+            console.log(d2);
+            var xScale=d3.scale.linear().domain([0,d3.max(d1)]).range([0,w/6]);
+            var yScale=d3.scale.ordinal().domain(d3.range(deneme.length)).rangeRoundBands([0,h-500],0.05);
+            var axsS=d3.scale.ordinal().domain(d2).rangeRoundBands([0,h-500],0.05);
+            var opacityS=d3.scale.linear().domain([0,d3.max(d1)]).range([0,1]);
+            var dataset=deneme;
+            svg.selectAll("rect").data(dataset).attr("x", xScale(0)+300)
+                    .attr("width",function(d){return xScale(d[1]["life_expectancy"]);});
+            svg.selectAll("text")
+                    .data(dataset).text(function(d) {return d[1]["life_expectancy"];}).attr("x", function(d) {return xScale(d[1]["life_expectancy"]) + 350;})
+                    .attr("y",function(d,i){return yScale(i)+yScale.rangeBand()/2;});
+            var yAxis = d3.svg.axis()
+                    .scale(axsS)
+                    .orient("left")
+                    .ticks(d1.length);
+            svg.append("g")
+                     .attr("class", "axis")
+                     .attr("transform", "translate(" + 300  + ",0)")
+                     .call(yAxis);
+   		  });
+
+    })
+</script>
+</body>
+</html>

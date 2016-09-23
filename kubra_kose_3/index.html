@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script type="text/javascript" src="http://d3js.org/d3.v3.js" charset="utf-8"></script>
+    <style type="text/css">
+		#tooltip, #tclick {
+        		position: absolute;
+        		width: 200px;
+        		height: auto;
+        		padding: 10px;
+        		background-color: #ffffed;
+        		border-radius: 10px;
+        		box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+        		pointer-events: none;
+		}
+
+		#tooltip.hidden {
+	      		display: none;
+		}
+
+		#tooltip p {
+        		margin: 0;
+		        font-family: sans-serif;
+        		font-size: 16px;
+        		line-height: 20px;
+		}
+         #tclick.hidden {
+	      		display: none;
+		}
+
+         #dclick {
+        		position: absolute;
+        		width: auto;
+        		height: auto;
+        		padding: 10px;
+        		background-color: #ffffed;
+        		border-radius: 10px;
+        		box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+        		pointer-events: none;;
+		}
+
+        #dclick.hidden {
+            display: none;
+		}
+
+			text {
+				font-family: sans-serif;
+				font-size: 12px;
+				fill: black;
+			}
+
+		.axis path,
+		.axis line {
+    			fill: none;
+    			stroke: black;
+    			shape-rendering: crispEdges;
+		}
+
+		.axis text {
+   			 font-family: sans-serif;
+    			 font-size: 11px;
+		}
+		.areas {
+  			stroke: steelblue;
+  			stroke-width: 1.5px;
+		}
+		.line2 {
+  			fill: none;
+  			stroke: red;
+  			stroke-width: 1.5px;
+		}
+        </style>
+    <title>Title</title>
+</head>
+<body>
+<div id="first" style="margin-left: 200px">
+<form style="margin-left: 170px; margin-top: 25px">
+    <select id="select1" name="select1">
+        <option id="Europe" value="Europe">Europe</option>
+        <option id="Asia" value="Asia">Asia</option>
+        <option id="Oceania" value="Oceania">Oceania</option>
+        <option id="Africa" value="Africa" selected="selected">Africa</option>
+        <option id="Americas" value="Americas">Americas</option>
+    </select>
+</form>
+<div id="tooltip" class="hidden">
+    <p><strong id="ulkeler"></strong></p>
+    <p><span id="value"></span></p>
+</div>
+<div id="tclick" class="hidden"></div>
+<div id="dclick" class="hidden"></div>
+<script type="text/javascript">
+    function dd(kita){
+
+        console.log(kita);
+
+        var e=[];
+        var cont=[];
+        var dnm=[];
+        //dnm.push({});
+        //console.log(dnm);
+        var y=[2000,2001,2002,2003,2004,2005,2006,2007,2008,2009,2010,2011,2012];
+        d3.json("countries.json", function(d){
+            for (i = 0; i < d.length; i++){
+                if (d[i]["continent"] == kita){
+                    if (e.indexOf([d[i]["name"]]) < 0) {
+                        e.push([d[i]["name"],
+                            {"n":d[i]["name"], "x":y[0], "y":d[i]["years"][5]["population"]},
+                            {"n":d[i]["name"], "x":y[1],"y":d[i]["years"][6]["population"]},
+                            {"n":d[i]["name"], "x":y[2],"y":d[i]["years"][7]["population"]},
+                            {"n":d[i]["name"], "x":y[3],"y":d[i]["years"][8]["population"]},
+                            {"n":d[i]["name"], "x":y[4],"y":d[i]["years"][9]["population"]},
+                            {"n":d[i]["name"], "x":y[5],"y":d[i]["years"][10]["population"]},
+                            {"n":d[i]["name"], "x":y[6],"y":d[i]["years"][11]["population"]},
+                            {"n":d[i]["name"], "x":y[7],"y":d[i]["years"][12]["population"]},
+                            {"n":d[i]["name"], "x":y[8],"y":d[i]["years"][13]["population"]},
+                            {"n":d[i]["name"], "x":y[9],"y":d[i]["years"][14]["population"]},
+                            {"n":d[i]["name"], "x":y[10],"y":d[i]["years"][15]["population"]},
+                            {"n":d[i]["name"], "x":y[11],"y":d[i]["years"][16]["population"]},
+                            {"n":d[i]["name"], "x":y[12],"y":d[i]["years"][17]["population"]}]);
+                    }
+                }
+                if (cont.indexOf(d[i].continent) < 0) {
+                    cont.push(d[i].continent);}
+            }
+            //d3.select("form").select("select").selectAll("option").data(cont)
+            //        .enter().append("option").attr("id",function(d){return d;})
+            //        .attr("value",function(d){return d}).text(function (d) {return d});
+
+            //console.log(e);
+
+            var e0=e.sort(function(x, y){return (y[13].y - x[13].y );});
+            console.log(e0);
+
+            var e2= e.slice(0,15);
+
+            var e3= e.slice(0,15);
+
+            //console.log(e2);
+
+
+            var ee=e2.sort(function(x, y){return (x[13].y - y[13].y );});   // data that contains 15 countries was sorted by population in 2012
+            console.log(ee);
+
+            var stack = d3.layout.stack();
+            stack(ee);
+
+            var ee2=e3;
+            console.log(ee2);
+
+            var w=500;
+            var ww=470;
+            var h=500;
+
+
+            var xScale=d3.scale.ordinal().domain(d3.range(15)).rangeRoundBands([0,w-50],0.2);
+            var yScale=d3.scale.linear()
+                    .domain([0,d3.max(ee,function(d){return d3.max(d,function(d){return d.y0+ d.y;})})])
+                    .range([50,h-50]);
+            var axsS=d3.scale.ordinal().domain(y).rangeRoundBands([0,w-100],0.05);
+
+            var xAxis = d3.svg.axis().scale(axsS).orient("bottom").ticks(y.length);
+            //var yAxis = d3.svg.axis().scale(yScale).orient("left").tickFormat(d3.format(".2s"));
+
+            var colors=d3.scale.category20();
+
+            var svgg=d3.select("div#first").append("svg").attr("width", 1000).attr("height", 1000);
+
+            var svg=svgg.append("svg").attr("width", ww).attr("height", h);
+
+            var svg0=svgg.append("g").attr("class", "isimler");
+            svg0.selectAll("text").data(ee2).enter().append("text")
+                    .transition()   //enable animation
+			   .delay(function(d, i) {
+    				return (i / ee.length)* 300 ;
+			   })
+                           .duration(100)   // transition time
+                           .ease("linear").text(function(d){return d[1].n}).attr("x",550).attr("y",function(d,i){return 30+i*30}).attr("fill", "black");
+            svg0.selectAll("line").data(ee).enter().append("line").attr("x1",520).attr("y1",function(d,i){return 25+i*30}).attr("x2",530)
+                    .attr("y2",function(d,i){return 25+i*30})
+                    .transition()   //enable animation
+			   .delay(function(d, i) {
+    				return (i / ee.length)* 300 ;
+			   })
+                           .duration(100)   // transition time
+                           .ease("linear").style("stroke", function (d) { return colors(ee2.indexOf(d));}).attr("stroke-width",10);
+
+            var groups = svg.selectAll("g")
+                    //.data(Object.keys(di))
+	    			.data(ee)
+	    			.enter()
+	    			.append("g")
+                    .attr("class","bars")
+	    			.style("fill", function(d, i) {
+	    				return colors(i);
+	    			});
+
+            var rects =groups.selectAll("rect").data(function(d){return d}).enter()
+                    .append("rect").attr("id",function(d,i){return i})
+                    .attr("x",function(d,i){return xScale(i);})
+                    .attr("y", function(d) {return h-yScale(d.y0+ d.y)-20;})
+                    .attr("width", xScale.rangeBand())
+                    .attr("height", function(d){return yScale(d.y);})
+                    .on("mouseover",function(d){
+                        var xPosition = parseFloat(d3.select(this).attr("x")) + xScale.rangeBand() / 4;
+                        var yPosition = parseFloat(d3.select(this).attr("y"))  + (h - parseFloat(d3.select(this).attr("y")))/4 ;
+                        d3.select("#tooltip").style("left", xPosition + "px").style("top", yPosition + "px").select("#value").text(d.y);
+                        d3.select("#tooltip").select("#ulkeler").text(d.n);
+                        d3.select("#tooltip").classed("hidden", false);
+                        d3.select("#tclick").select("svg").remove();
+                        d3.select("#dclick").select("svg").remove();
+                    })
+                    .on("mouseout", function(d) {d3.select(this).transition();
+                        d3.select("#tooltip").classed("hidden", true);
+                        d3.select("#tclick").classed("hidden", true);
+                        d3.select("#dclick").classed("hidden", true);
+                        d3.select("#tclick").select("svg").remove();
+                        d3.select("#dclick").select("svg").remove();
+                    })
+                    .on("click",function(d) {
+
+                        var rotate = function (d) {
+                            var angle = (360 / Math.PI * (d.startAngle + d.endAngle) / 4 - 90);
+                            return (angle > 360) ? 360 - angle : angle;
+                        };
+
+
+                        var xPosition = parseFloat(d3.select(this).attr("x")) + xScale.rangeBand() / 4;
+                        var yPosition = parseFloat(d3.select(this).attr("y"))  + (h - parseFloat(d3.select(this).attr("y")))/4 ;
+
+                        d3.select("#tooltip").classed("hidden", true);
+
+                        console.log(d3.select(this).datum());
+                        console.log(d3.selectAll("g.bars")[0]);
+                        console.log(d3.select("g:nth-child("+1+")").datum());
+                        console.log(d3.select(this).attr("id"));
+                        var aa=d3.select(this).attr("id");
+
+                        var pielist=[];
+                        var pienames=[];
+                        for (s=1; s<d3.selectAll("g.bars")[0].length+1; s++){
+                            pielist.push(d3.select("g:nth-child("+s+")").datum()[aa].y);
+                            pienames.push(d3.select("g:nth-child("+s+")").datum()[0]);
+                            //console.log(d3.select("g.bars:nth-child("+s+")").datum()[aa].y);
+                        }
+                        console.log(pielist);
+                        console.log(pienames);
+
+                        var pienames1=[];
+                        for (f=pienames.length-1; f>-1; f--){
+                            pienames1.push(pienames[f]);
+                        }
+                        console.log(pienames1);
+
+                        //console.log(d3.select("g").datum()[aa].y);
+
+                        var colors=d3.scale.category20();
+
+                        var piee=pielist.sort(function(x, y){return (y - x  );});
+                        console.log(piee);
+
+                        var pie = d3.layout.pie();
+                        var svg2=d3.select("div#tclick").append("svg").attr("width", 200).attr("height", 200);
+                        var outerRadius = 100;
+                        var innerRadius = 0;
+                        var arc = d3.svg.arc().innerRadius(innerRadius).outerRadius(outerRadius);
+                        var arcs=svg2.append("g")
+                                .attr("class", "pie")
+                                .attr("transform", "translate(" + outerRadius + ", " + outerRadius + ")")
+                                .selectAll("path")
+                                .data(pie(piee))
+                                .enter();
+                        arcs.append("path")
+                                .attr("d", function(d) {return arc(d);})
+                                .attr("class", "arc")
+                                .attr("fill", function (d,i) { return colors(i);});
+                        arcs.append("text")
+                                .attr("transform", function(d) {return "translate(" + arc.centroid(d) + ") rotate(" + rotate(d) + ")"; })
+                                .attr("text-anchor", "middle")
+                                .style("font-size",10)
+                                .text(function (d,i) {return pienames1[i];});
+
+                        d3.select("#tclick")
+                                .style("left", xPosition + "px")
+                                .style("top", yPosition + "px").classed("hidden", false);
+
+                        console.log("fhjbjknklmöç");
+                        console.log(d3.select(this));
+                    })
+                    .on("dblclick",function(d){
+
+                        w=500;
+                        h=250;
+                        padding=60;
+
+                        var c=(d3.select(this.parentNode).attr("style").split(":")[1].split(";")[0]);
+                        //console.log(d3.select(this.parentNode).attr("style").slice(6,(d3.select(this.parentNode).attr("style").length)).split(";")[0]);
+                        var title=d3.select(this.parentNode).datum()[1].n;
+                        var arealist=[];
+                        for ( item=1; item<d3.select(this.parentNode).datum().length; item++ ) {
+                            arealist.push(d3.select(this.parentNode).datum()[item].y);
+                            console.log(d3.select(this.parentNode).datum()[item].y)}
+
+                        var xScale1=d3.scale.ordinal().domain(d3.range(15)).rangeRoundBands([0,w-50],0.2);
+
+                        var xScale2 = d3.scale.linear().domain([0,arealist.length-1]).range([92, w-40]);
+
+                        var xScale = d3.scale.linear().domain([2000,2012]).range([padding, w-padding]);
+                        var yScale = d3.scale.linear().domain([0, d3.max(arealist)]).range([h-padding, padding]);
+
+                        var xPosition = parseFloat(d3.select(this).attr("x")) + xScale1.rangeBand() / 2;
+                        var yPosition = parseFloat(d3.select(this).attr("y"))  + (h - parseFloat(d3.select(this).attr("y")))/2 ;
+
+                        d3.select("#tooltip").classed("hidden", true);
+                        d3.select("#tclick").classed("hidden", true);
+
+                        var xAxis = d3.svg.axis().scale(xScale).orient("bottom").ticks(y.length).tickFormat(d3.format("g"));
+                        var yAxis = d3.svg.axis().scale(yScale).orient("left").ticks(arealist.length).tickFormat(d3.format("g"));
+
+                        var area = d3.svg.area()
+                                .x(function(d, i) { return xScale2(i); })
+                                .y0(yScale(0)).y1(function(d) { return yScale(d); }).interpolate("linear");
+
+                        var svg3=d3.select("div#dclick").append("svg").attr("width", 500).attr("height", 250);
+
+                        svg3.append("g").attr("class", "axis")
+                                .attr("transform", "translate("+20+"," + (h - padding) + ")").call(xAxis)
+                                .selectAll("text").style("text-anchor", "end").attr("dx", "-.8em")
+                                .attr("dy", ".15em").attr("transform", "rotate(-65)" );
+
+                        svg3.append("g").attr("class", "axis")
+                                .attr("transform", "translate(" + 90 + ",0)").call(yAxis);
+
+                        svg3.append("path").attr("class", "areas")
+                                .attr("fill",c)
+                                .attr("d", area(arealist));
+
+                        svg3.append("text").text(title).attr("x",200).attr("y",50);
+                        svg3.append("line").attr("x1",170).attr("y1",45).attr("x2",180).attr("y2",45)
+                                .attr("stroke-width",10).style("stroke", c);
+
+
+                        d3.select("#dclick")
+                                .style("left", xPosition + "px")
+                                .style("top", yPosition + "px").classed("hidden", false);
+
+                        console.log("okoko");
+                        console.log(arealist);
+
+                    });
+
+            svg.append("g")
+                    .attr("class", "axis")
+                    .attr("stroke-width",2)
+                    .attr("transform", "translate(" + 20  + "," + 480 +")")
+                    .call(xAxis);
+            svg.exit().remove();
+        })
+    }
+
+    dd("Africa");
+
+    d3.select('form').select("select").on('change', function() {
+        d3.select("svg").remove();
+        var newData = d3.select(this).property('value');
+        dd(newData);
+    });
+
+</script>
+</div>
+</body>
+</html>

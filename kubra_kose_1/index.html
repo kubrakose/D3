@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" type="text/css" href="a1.css">
+    <script type="text/javascript" src="kubrakose_a1_partB.js"></script>
+    <title>Title</title>
+</head>
+<body>
+   <div align="center">
+       <form name="calc" class="calc"><br>
+           <table class="btn" border="1px solid #7c1849;">
+               <tr><input class="disp" name="disp" id="disp" placeholder="0" value=""><br></tr>
+               <tr>
+                   <td>
+                        <table id="num">
+                            <tr><td><input type="button" value="7" id="7" class="n" onclick="items(this.value)"></td>
+                                <td><input type="button" value="8" id="8" class="n" onclick="items(this.value)"></td>
+                                <td><input type="button" value="9" id="9" class="n" onclick="items(this.value)"><br></td></tr>
+                            <tr><td><input type="button" value="4" id="4" class="n" onclick="items(this.value)"></td>
+                                <td><input type="button" value="5" id="5" class="n" onclick="items(this.value)"></td>
+                                <td><input type="button" value="6" id="6" class="n" onclick="items(this.value)"><br></td></tr>
+                            <tr><td><input type="button" value="1" id="1" class="n" onclick="items(this.value)"></td>
+                                <td><input type="button" value="2" id="2" class="n" onclick="items(this.value)"></td>
+                                <td><input type="button" value="3" id="3" class="n" onclick="items(this.value)"><br></td></tr>
+                        </table>
+                        <table id="op" class="op"><br>
+                            <tr><td><input class="opr" type="button" value="+" id="+" onclick="items(this.value)"></td>
+                                <td><input class="opr" type="button" value="-" id="-" onclick="items(this.value)"></td></tr>
+                        </table>
+                       <table id="reset" class="reset"><br>
+                            <tr>
+                                <td><input class="rst" type="button" value="Reset" id="rst" onclick="items(this.value)"></td>
+                            </tr>
+                       </table>
+                   </td>
+                   <td>
+                       <table id="items" class="items"><br>
+                           <tr><td><input class="item" name="item" type="button" value="Apple" id="*2" onclick="items(this.id)"></td></tr>
+                           <tr><td><input class="item" name="item" type="button" value="Lemon" id="*4" onclick="items(this.id)"></td></tr>
+                           <tr><td><input class="item" name="item" type="button" value="Carrot" id="*1" onclick="items(this.id)"></td></tr>
+                           <tr><td><input class="item" name="item" type="button" value="Banana" id="*3" onclick="items(this.id)"></td></tr>
+                           <tr><td><input class="item" name="item" type="button" value="Pear" id="*5" onclick="items(this.id)"></td></tr>
+                           <table><tr><td><input class="item" type="button" value="Enter" id="ent" onclick="items(this.value)" style="background-color: lightblue; margin-bottom:20px"></td></tr></table>
+                       </table>
+                   </td>
+               </tr>
+           </table>
+       </form>
+   </div>
+</body>
+</html>

@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script type="text/javascript" src="http://d3js.org/d3.v3.js" charset="utf-8"></script>
+    <title>Title</title>
+<style type="text/css">
+    #tooltip p {
+        		margin: 0;
+		        font-family: sans-serif;
+        		font-size: 16px;
+        		line-height: 20px;
+		}
+    #tooltip, #tclick {
+        		position: absolute;
+        		width: auto;
+        		height: auto;
+        		padding: 10px;
+        		background-color: #ffffed;
+        		border-radius: 10px;
+        		box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4);
+        		pointer-events: none;
+		}
+    #tclick.hidden {
+	      		display: none;
+		}
+		circle.node {
+  			cursor: pointer;
+  			stroke: #000087;
+            stroke-width: 1.7px;
+		}
+
+        .hidden {
+	      		display: none;
+		}
+
+        #tooltip.hidden {
+	      		display: none;
+		}
+        #tooltip p {
+        		margin: 0;
+		        font-family: sans-serif;
+        		font-size: 16px;
+        		line-height: 20px;
+		}
+
+        text{
+            fill: #00005a;
+            background-color: transparent;
+        }
+
+		line.link {
+  			fill: none;
+  			stroke: #abdaf2;
+  			stroke-width: 2px;
+		}
+</style>
+</head>
+<body>
+<div id="first" style="margin-left: 400px">
+<form id="labels" style="margin-left: 85px">
+    <label><input type="radio" name="click" id="r1" > Show Labels</label>
+    <label><input type="radio" name="click" id="r2" checked> Hide Labels </label>
+</form>
+<div id="years" style="margin-left: 60px">Select Year:
+    <input id="slide" type="range" min="2000" max="2012" step="1" onchange="showValue(this.value)" value="2000" style="width: 150px"/>
+    <span id="range">2000</span>
+</div>
+<div id="filter">Filter:
+    <input id="filters" type="range" min="0" max="100" step="1" onchange="showp(this.value)" value="0" style="width: 300px"/>
+    <span id="percentage">%0</span>
+</div>
+<div id="tooltip" class="hidden">
+    <p><strong id="ulkeler"></strong></p>
+    <p><span id="value"></span></p>
+</div>
+<div id="tclick" class="hidden"></div>
+    </div>
+<div id="divsvg" style="margin-left: 150px"></div>
+
+<script type="text/javascript">
+
+    function showValue(newValue) {document.getElementById("range").innerHTML=newValue;}
+    function showp(newValue) {document.getElementById("percentage").innerHTML="%"+newValue;}
+
+    function sene(yil) {
+
+        function filtering(x) {
+
+            var width = 1000;
+            var height = 1000;
+            var root;
+
+            var force = d3.layout.force().size([width - 100, height - 450])
+                    .linkDistance(85)
+                    .charge(function (d) {return -135;});
+
+            var svg = d3.select("div#divsvg").append("svg").attr("width", width).attr("height", height);
+
+            var tree = d3.layout.tree();
+            var edge = svg.selectAll(".edge");
+            var node = svg.selectAll(".node");
+            var textt = svg.selectAll("text.hidden");
+
+            var cont = [];
+            var s = {"name": "World", "children": []};
+            s2 = {"name": "World", "children": []};
+            p = [];
+            l = [];
+            pop = [];
+            d3.json("countries.json", function (d) {
+                for (i = 0; i < d.length; i++) {
+                    if (cont.indexOf(d[i]["continent"]) < 0) {
+                        cont.push(d[i]["continent"]);
+                        s.children.push({"name": d[i]["continent"], "children": []});
+                        s2.children.push({"name": d[i]["continent"], "children": []})
+                    }
+
+                    for (i2 = 0; i2 < s.children.length; i2++) {
+                        for (i3 = 5; i3 < 18; i3++) {
+                            if (d[i]["years"][i3]["year"] == yil) {
+                                if (d[i]["continent"] == s.children[i2]["name"]) {
+                                    s.children[i2]["children"].push({
+                                        "name": d[i].name,
+                                        "pop": d[i]["years"][i3]["population"]
+                                    });
+                                    s2.children[i2]["children"].push({
+                                        "name": d[i].name,
+                                        "pop": d[i]["years"][i3]["population"]
+                                    });
+                                    p.push(d[i]["years"][i3]["population"])
+                                }
+                            }
+                        }
+                    }
+
+                    d[i]["years"] = d[i]["years"].slice(5, 18);
+                    for (ii = 0; ii < d[i]["years"].length; ii++) {
+                        d[i]["years"][ii] = d[i]["years"][ii]["population"];
+                    }
+                    l.push([d[i]["name"], d[i]["years"]]);
+                    pop.push(d[i]["years"]);
+                }
+
+                console.log(l);
+                console.log(pop);
+                console.log(d3.max(p));
+
+                var pack = d3.layout.pack().value(function (d) {return d.pop;});
+                pack.nodes(s2);
+
+                console.log(s2);
+                console.log(Object.keys(s2));
+                console.log(s2.value);
+                root = s2;
+                console.log(s);
+                console.log(Object.keys(s.children[0]));
+                update();
+
+            });
+
+            function update() {
+
+                Scale = d3.scale.linear().domain([0, d3.max(p)]).range([50, height - 90]);
+                nodes = fonksiyon(root);
+                edges = tree.links(nodes);
+
+                for (i=0;i<nodes.length; i++){if(nodes[i].name=="World"){nodes[i].fixed=true;nodes[i].x=450;nodes[i].y=300;}}
+
+                textt = textt.data(nodes);
+                textt.exit().remove();
+
+                var xScale = d3.scale.ordinal().domain(d3.range(15)).rangeRoundBands([0, width - 250], 0.2);
+
+                force.nodes(nodes).links(edges).start();
+
+                edge = edge.data(edges, function (d) {return d.target.id;});
+                edge.exit().remove();
+                edge.enter().insert("line", ".node").attr("class", "link");
+
+                node = node.data(nodes, function (d) {return d.id;}).style("fill", color);
+                node.exit().remove();
+                node.enter().append("circle").attr("class", "node").style("fill", color).on("click", click).call(force.drag)
+                        .on("mouseover", function (d) {
+                            var xPosition = parseFloat(d3.select(this)[0][0].__data__.x+50);
+                            var yPosition = parseFloat(d3.select(this)[0][0].__data__.y+50);
+                            d3.select("#tooltip").style("left", xPosition + "px").style("top", yPosition + "px");
+                            d3.select("#value").text(d.value);
+                            d3.select("#tooltip").select("#ulkeler").text(d.name);
+                            d3.select("#tooltip").classed("hidden", false);
+                        })
+                        .on("mouseout", function (d) {
+                            d3.select(this).transition();
+                            d3.select("#tooltip").classed("hidden", true);
+                            d3.select("#tclick").classed("hidden", true);
+                            d3.select("#tclick").select("svg").remove();
+                        });
+
+                textt.enter().append("text").attr("class", "hidden").text(function (d) {return d.name;});
+
+                if(x==0){
+                    edge = edge.data(edges, function (d) {return d.target.id;});
+                    edge.exit().remove();
+                    edge.enter().insert("line", ".node").attr("class", "link");
+
+                    console.log(nodes);
+
+                    node = node.data(nodes, function (d) {return d.id;}).style("fill", color);
+                    node.exit().remove();
+                    node.enter().append("circle").attr("class", "node").style("fill", color).on("click", click).call(force.drag)
+                            .on("mouseover", function (d) {
+                                var xPosition = parseFloat(d3.select(this)[0][0].__data__.x+50);
+                                var yPosition = parseFloat(d3.select(this)[0][0].__data__.y+50);
+                                d3.select("#tooltip").style("left", xPosition + "px").style("top", yPosition + "px");
+                                d3.select("#value").text(d.value);
+                                d3.select("#tooltip").select("#ulkeler").text(d.name);
+                                d3.select("#tooltip").classed("hidden", false);
+                            })
+                            .on("mouseout", function (d) {
+                                d3.select(this).transition();
+                                d3.select("#tooltip").classed("hidden", true);
+                                d3.select("#tclick").classed("hidden", true);
+                                d3.select("#tclick").select("svg").remove();
+                            });
+                }
+
+                if(x==100) {
+                    newnode=[];
+                    for (z = 0; z < nodes.length; z++) {
+                        if (nodes[z].children || nodes[z].name=="World") {
+                            console.log(nodes[z]);newnode.push(nodes[z]);
+                        }
+                    }
+                    console.log(newnode);
+
+                    node = node.data(newnode, function (d) {return d.id;}).style("fill", color);
+                    node.exit().remove();
+                    node.enter().append("circle").attr("class", "node").style("fill", color).on("click", click).call(force.drag)
+                            .on("mouseover", function (d) {
+                                var xPosition = parseFloat(d3.select(this)[0][0].__data__.x+50);
+                                var yPosition = parseFloat(d3.select(this)[0][0].__data__.y+50);
+                                d3.select("#tooltip").style("left", xPosition + "px").style("top", yPosition + "px");
+                                d3.select("#value").text(d.value);
+                                d3.select("#tooltip").select("#ulkeler").text(d.name);
+                                d3.select("#tooltip").classed("hidden", false);
+                            })
+                            .on("mouseout", function (d) {
+                                d3.select(this).transition();
+                                d3.select("#tooltip").classed("hidden", true);
+                                d3.select("#tclick").classed("hidden", true);
+                                d3.select("#tclick").select("svg").remove();
+                            });
+
+                    textt = textt.data(newnode,function (d) {return d.name;});
+                    textt.exit().remove();
+                    textt.enter().append("text").attr("class", "hidden").text(newnode)
+                    .attr("transform", function (d) {return "translate(" + d.x + "," + d.y + ")"});
+
+                    console.log(d3.selectAll("line"));
+                    for(w=0; w<119 ; w++){
+                        d3.select("line").remove();
+                    }
+                }
+
+                if(x>0 && x<100){
+
+                    var filterp=d3.max(p)*x/100;
+                    console.log(filterp);
+                    newnode2=[];
+                    for (z = 0; z < nodes.length; z++) {
+                        if(nodes[z].value>filterp || nodes[z].children){
+                            //console.log(nodes[z]);
+                            newnode2.push(nodes[z])
+                        }
+                    }
+
+                    var name=[];
+                    for (zz = 0; zz < newnode2.length; zz++) {  name.push(newnode2[zz].name);   }
+
+                    for(ww=0; ww<tree.links(newnode2).length ; ww++) {
+                            console.log(tree.links(newnode2)[ww].target.name)
+
+                    }
+
+                    var index=[];
+                    for(ww=0; ww<d3.selectAll("line.link")[0].length ; ww++){
+                        //console.log(name.indexOf(edge[0][ww].__data__.target.name));
+                        if(name.indexOf(d3.selectAll("line.link")[0][ww].__data__.target.name)<0){
+                            index.push(ww);
+                        }
+                    }
+
+                    index.sort(function(x, y){return (y - x );});
+                    console.log(index);
+
+
+                    node = node.data(newnode2, function (d) {return d.id;}).style("fill", color);
+                    node.exit().remove();
+                    node.enter().append("circle").attr("class", "node").style("fill", color).on("click", click).call(force.drag)
+                            .on("mouseover", function (d) {
+                                var xPosition = parseFloat(d3.select(this)[0][0].__data__.x+50);
+                                var yPosition = parseFloat(d3.select(this)[0][0].__data__.y+50);
+                                d3.select("#tooltip").style("left", xPosition + "px").style("top", yPosition + "px");
+                                d3.select("#value").text(d.value);
+                                d3.select("#tooltip").select("#ulkeler").text(d.name);
+                                d3.select("#tooltip").classed("hidden", false);
+                            })
+                            .on("mouseout", function (d) {
+                                d3.select(this).transition();
+                                d3.select("#tooltip").classed("hidden", true);
+                                d3.select("#tclick").classed("hidden", true);
+                                d3.select("#tclick").select("svg").remove();
+                            });
+
+                    console.log(newnode2);
+                    textt = textt.data(newnode2,function (d) {return d.name;});
+                    textt.exit().remove();
+                    textt.enter().append("text").attr("class", "hidden").text(newnode2)
+                    .attr("transform", function (d) {return "translate(" + d.x + "," + d.y + ")"});
+
+
+                    //d3.selectAll("line.link")[0][0].remove();
+
+
+                    for(ww=0; ww<index.length ; ww++){
+                        try{
+                        //console.log(name.indexOf(d3.selectAll("line.link")[0][ww].__data__.target.name));
+                        //console.log(document.getElementsByTagName("line"));
+                        d3.selectAll("line.link")[0][index[ww]].remove(); }
+                        catch (err){continue;}
+                    }
+                }
+
+                force.on("tick", function () {
+                    edge.attr("x1", function (d) {return d.source.x;})
+                            .attr("y1", function (d) {return d.source.y;})
+                            .attr("x2", function (d) {return d.target.x;})
+                            .attr("y2", function (d) {return d.target.y;});
+                    node.attr("cx", function (d) {return d.x;})
+                            .attr("cy", function (d) {return d.y;})
+                            .attr("r", function (d) {return d.children ? 10 : Math.sqrt(Scale(d.value))});
+                    textt.attr("transform", function (d) {return "translate(" + d.x + "," + d.y + ")";
+                    });
+                })
+            }
+
+
+            colors = d3.scale.category20();
+
+            function color(d) {return d._children ? "#3182bd" : d.children ? "#c6dbef" : "#fd8d3c";}
+
+            function click(d) {
+                if (d.children) {
+
+                    console.log(d);
+                    console.log(d.pop);
+                    console.log(d3.select(this)[0][0].getAttribute("r"));
+
+                    console.log(d3.select(this)[0][0].__data__.x);
+
+                    d._children = d.children;
+                    d.children = null;
+                }
+
+                else {
+                    console.log(d);
+                    console.log(d.pop);
+
+                    d.children = d._children;
+                    d._children = null;
+                }
+
+                if (d.pop) {
+                    console.log(d3.select(this));
+                    console.log(d.name);
+                    for (i = 0; i < l.length; i++) {
+                        if (d.name == l[i][0]) {
+
+
+                            d3.select("#tclick").select("svg").remove();
+
+                            d3.select("#tooltip").classed("hidden", true);
+
+                            console.log("okokokokok");
+
+                            var y = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012];
+                            w = 400;
+                            h = 200;
+                            padding = 25;
+
+                            var xScale2 = d3.scale.ordinal().domain(d3.range(y.length)).rangeRoundBands([padding * 6, 500], 0.05);
+                            var yScale2 = d3.scale.linear().domain([0, d3.max(l[i][1])]).range([padding * 2, h - padding]);
+
+                            var axsS = d3.scale.linear().domain([0, d3.max(l[i][1])]).range([h - padding, 0]);
+
+                            var yAxis = d3.svg.axis().scale(axsS).orient("left").ticks(6).tickFormat(d3.format("g"));
+
+                            var xPosition = parseFloat(d3.select(this)[0][0].__data__.x+50);
+                            var yPosition = parseFloat(d3.select(this)[0][0].__data__.y+50);
+
+                            var svg3 = d3.select("div#tclick").append("svg").attr("width", 600).attr("height", 300);
+                            svg3.selectAll("rect")
+                                    .data(l[i][1]).enter().append("rect")
+                                    .attr("x", function (d, i) {return xScale2(i);})
+                                    .attr("y", function (d) {return h - yScale2(d)})
+                                    .attr("width", xScale2.rangeBand() / 1.5)
+                                    .attr("height", function (d) {return yScale2(d);})
+                                    .attr("transform", "translate(" + 0 + "," + 24 + ")")
+                                    .attr("fill", function (d, i) {return colors(i);});
+
+                            svg3.append("text").text(l[i][0]).attr("x", 300).attr("y", 30).attr("class", "title").attr("fill", colors(19)).style("font-size", 20);
+
+                            svg3.append("g").attr("class", "axis").attr("transform", "translate(" + 120 + "," + 50 + ")").style("fill", "transparent").call(yAxis);
+
+                            d3.select("#tclick").style("left", xPosition + "px").style("top", yPosition + "px").classed("hidden", false);
+                            d3.selectAll("g.tick").append("line").attr("y1", 0).attr("x1", -9).attr("y2", 0).attr("x2", 385).attr("stroke", "steelblue");
+
+                            var svg4 = svg3.append("g").attr("class", "yillar");
+                            svg4.selectAll("text").data(y.slice(0, 7)).enter().append("text").text(function (d) {return d})
+                                    .attr("x", function (d, i) {return 120 + i * 70})
+                                    .attr("y", 260);
+                            svg4.selectAll("line").data(y.slice(0, 7)).enter().append("line").attr("class", "years1")
+                                    .attr("x1", function (d, i) {return 110 + i * 70})
+                                    .attr("y1", 250)
+                                    .attr("x2", function (d, i) {return 110 + i * 70})
+                                    .attr("y2", 260)
+                                    .attr("stroke-width", 10)
+                                    .style("stroke", function (d, i) {return colors(i);});
+
+
+                            var svg5 = svg3.append("g").attr("class", "yillar2");
+                            svg5.selectAll("text").data(y.slice(7, 14)).enter().append("text").text(function (d) {return d})
+                                    .attr("x", function (d, i) {return 120 + i * 70})
+                                    .attr("y", 290);
+                            svg5.selectAll("line").data(y.slice(7, 14)).enter().append("line")
+                                    .attr("class", "years2")
+                                    .attr("x1", function (d, i) {return 110 + i * 70}).attr("y1", 280)
+                                    .attr("x2", function (d, i) {return 110 + i * 70}).attr("y2", 290)
+                                    .attr("stroke-width", 10)
+                                    .style("stroke", function (d, i) {return colors(7 + i);});
+
+                        }
+                    }
+                }
+
+                update();
+            }
+
+            function fonksiyon(root) {
+                var nodes = [];
+                var i = 0;
+
+                function recurse(node) {
+                    if (node.children) node.children.forEach(recurse);
+                    if (!node.id) node.id = ++i;
+                    nodes.push(node);
+                }
+
+                recurse(root);
+                return nodes;
+            }
+
+            d3.select("input#r1").on("click", function () {
+                d3.selectAll("text").classed("hidden", false);
+            });
+
+            d3.select("input#r2").on("click", function () {
+                d3.selectAll("text").classed("hidden", true);
+            });
+        }
+        filtering(0);
+
+        d3.select('div#filter').select("input").on('change', function() {
+            d3.select("input#r2").property("checked",true);
+            d3.select("svg").remove();
+            var newData = d3.select(this).property('value');
+            console.log(newData);
+            filtering(newData);
+        });
+
+    }
+    sene(2000);
+
+    d3.select('div#years').select("input").on('change', function() {
+        d3.select("input#r2").property("checked",true);
+        d3.select("input#filters").property("value",0);
+        showp(0);
+        d3.select("svg").remove();
+        var newData = d3.select(this).property('value');
+        console.log(newData);
+        sene(newData);
+    });
+
+</script>
+
+</body>
+</html>
+
+
